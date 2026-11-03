@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مكتبة | Library</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F6;--surface:#fff;--ink:#17203A;--muted:#5C6682;--line:#D5DBE7;--brand:#22346B;--on-brand:#fff;--brass:#B9791E;--ok:#1E7A52;--bad:#B3392F;--okbg:#DDF1E7;--badbg:#F8E1DE}
+:root[data-theme=dark]{--bg:#0F1524;--surface:#18203A;--ink:#E7EBF6;--muted:#9AA5C4;--line:#2B3659;--brand:#8EA6F2;--on-brand:#0F1524;--brass:#E2A54A;--ok:#6FD3A1;--bad:#FF8F85;--okbg:#17372B;--badbg:#472320}
+*{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;padding:.8rem 1.2rem;background:var(--surface);border-block-end:3px solid var(--brass)}
+h1{margin:0;font-size:1.3rem;color:var(--brand)}
+.bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);padding:.4rem .9rem;border-radius:6px;cursor:pointer}
+.btn.p{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+.btn.d{color:var(--bad)}
+main{max-width:1000px;margin:auto;padding:1.2rem}
+nav{display:flex;gap:.4rem;margin-block-end:1rem}
+nav .btn[aria-current=true]{background:var(--brand);color:var(--on-brand)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1rem;margin-block-end:1rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;margin-block-end:.8rem}
+input,select{padding:.45rem .7rem;border:1px solid var(--line);border-radius:6px;background:var(--bg);min-width:0}
+.row input{flex:1 1 160px}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{text-align:start;padding:.55rem .6rem;border-block-end:1px solid var(--line)}
+th{color:var(--muted);font-weight:500}
+.tag{padding:.1rem .6rem;border-radius:99px;font-size:.85rem;white-space:nowrap}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.no{background:var(--badbg);color:var(--bad)}
+.login{max-width:380px;margin:12vh auto;padding:1.5rem}
+.login label{display:block;margin-block-end:.8rem}.login input{width:100%}
+.hint{color:var(--muted);font-size:.9rem}
+.err{color:var(--bad)}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:min(320px,90vw)}
+dialog::backdrop{background:#0008}
+td .btn{margin-inline-end:.3rem}
+@media(prefers-reduced-motion:no-preference){main{animation:in .3s}@keyframes in{from{opacity:0}}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<dialog id="dlg"></dialog>
+<script>
+const T={ar:{app:"نظام إدارة المكتبة",login:"تسجيل الدخول",user:"اسم المستخدم",pass:"كلمة المرور",bad:"بيانات الدخول غير صحيحة",demo:"حسابات تجريبية: admin / admin  —  lib / lib",logout:"خروج",books:"الكتب",loans:"سجل الاستعارة",users:"المستخدمون",search:"ابحث بالعنوان أو المؤلف أو ISBN",all:"الكل",avail:"متاح",out:"معار",title:"العنوان",author:"المؤلف",copies:"النسخ",status:"الحالة",add:"إضافة كتاب",addu:"إضافة مستخدم",borrow:"إعارة",ret:"إرجاع",del:"حذف",member:"عضو",name:"الاسم",role:"الدور",admin:"مدير النظام",librarian:"مسؤول المكتبة",borrower:"المستعير",outd:"تاريخ الإعارة",due:"الاستحقاق",retd:"تاريخ الإرجاع",open:"لم يُرجع",cancel:"إلغاء",confirm:"تأكيد الإعارة",none:"لا توجد نتائج",nomem:"أضف عضواً أولاً من إدارة المستخدمين",ok:"تمت الإعارة بنجاح",left:"متاح"},
+en:{app:"Library Management System",login:"Sign in",user:"Username",pass:"Password",bad:"Wrong username or password",demo:"Demo accounts: admin / admin  —  lib / lib",logout:"Sign out",books:"Books",loans:"Borrowing history",users:"Users",search:"Search by title, author or ISBN",all:"All",avail:"Available",out:"Checked out",title:"Title",author:"Author",copies:"Copies",status:"Status",add:"Add book",addu:"Add user",borrow:"Lend",ret:"Return",del:"Delete",member:"Member",name:"Name",role:"Role",admin:"Administrator",librarian:"Librarian",borrower:"Borrower",outd:"Lent on",due:"Due",retd:"Returned",open:"Not returned",cancel:"Cancel",confirm:"Confirm loan",none:"No results",nomem:"Add a member first in Users",ok:"Loan recorded",left:"available"}};
+const ROLES=["admin","librarian","member"];
+const seed=()=>({users:[{id:1,name:"Admin",username:"admin",pass:"admin",role:"admin"},{id:2,name:"Layla Haddad",username:"lib",pass:"lib",role:"librarian"},{id:3,name:"Omar Khalil",username:"omar",pass:"1234",role:"member"},{id:4,name:"سارة منصور",username:"sara",pass:"1234",role:"member"}],
+books:[{id:1,title:"مقدمة ابن خلدون",author:"ابن خلدون",isbn:"9786140100011",copies:2},{id:2,title:"Clean Code",author:"Robert C. Martin",isbn:"9780132350884",copies:1},{id:3,title:"ثلاثية غرناطة",author:"رضوى عاشور",isbn:"9789771416357",copies:3},{id:4,title:"The Pragmatic Programmer",author:"Hunt & Thomas",isbn:"9780135957059",copies:1}],
+loans:[{id:1,bookId:2,memberId:3,out:Date.now()-5*864e5,due:Date.now()+9*864e5,ret:null}]});
+let db,me=null,view="books",q="",flt="all",lang="ar",theme="light",err="";
+const store={get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+db=JSON.parse(store.get("lib-db")||"null")||seed();
+lang=store.get("lib-lang")||"ar";
+theme=store.get("lib-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+const save=()=>store.set("lib-db",JSON.stringify(db));
+const t=k=>T[lang][k]||k;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=d=>new Date(d).toLocaleDateString(lang==="ar"?"ar-JO":"en-GB");
+const nid=a=>Math.max(0,...a.map(x=>x.id))+1;
+const active=b=>db.loans.filter(l=>l.bookId===b&&!l.ret).length;
+const free=b=>b.copies-active(b.id);
+const byId=(a,id)=>a.find(x=>x.id===id);
+function apply(){const h=document.documentElement;h.lang=lang;h.dir=lang==="ar"?"rtl":"ltr";h.dataset.theme=theme;document.title=t("app")}
+function render(){
+  apply();const app=document.getElementById("app");
+  if(!me){app.innerHTML=`<div class="panel login"><div class="bar" style="justify-content:space-between"><h1>${t("app")}</h1>${tools()}</div><br><label>${t("user")}<input id="u" autocomplete="username"></label><label>${t("pass")}<input id="p" type="password" autocomplete="current-password"></label><button class="btn p" id="go">${t("login")}</button><p class="err" role="alert">${err?t(err):""}</p><p class="hint">${t("demo")}</p></div>`;
+    const go=()=>{const u=db.users.find(x=>x.username===u_.value&&x.pass===p_.value);if(u){me=u;err="";view="books";render()}else{err="bad";render()}};
+    const u_=document.getElementById("u"),p_=document.getElementById("p");document.getElementById("go").onclick=go;p_.onkeydown=e=>{if(e.key==="Enter")go()};u_.onkeydown=p_.onkeydown;bind();return}
+  const tabs=me.role==="admin"?["books","users"]:["books","loans"];
+  if(!tabs.includes(view))view="books";
+  app.innerHTML=`<header><h1>${t("app")}</h1><div class="bar"><span>${esc(me.name)} <span class="hint">(${t(me.role==="member"?"member":me.role)})</span></span>${tools()}<button class="btn" id="out">${t("logout")}</button></div></header><main><nav>${tabs.map(x=>`<button class="btn" data-v="${x}" aria-current="${x===view}">${t(x)}</button>`).join("")}</nav>${view==="books"?booksV():view==="loans"?loansV():usersV()}</main>`;
+  document.getElementById("out").onclick=()=>{me=null;render()};
+  document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;q="";render()});
+  bind();wire();
+}
+const tools=()=>`<button class="btn" data-act="lang" aria-label="Language">${lang==="ar"?"EN":"عربي"}</button><button class="btn" data-act="theme" aria-label="Theme">${theme==="dark"?"☀":"☾"}</button>`;
+function bind(){document.querySelector("[data-act=lang]").onclick=()=>{lang=lang==="ar"?"en":"ar";store.set("lib-lang",lang);render()};document.querySelector("[data-act=theme]").onclick=()=>{theme=theme==="dark"?"light":"dark";store.set("lib-theme",theme);render()}}
+function booksV(){
+  const L=me.role==="librarian",s=q.toLowerCase();
+  const rows=db.books.filter(b=>(b.title+b.author+b.isbn).toLowerCase().includes(s)&&(flt==="all"||(flt==="avail")===(free(b)>0))).map(b=>{const f=free(b);return `<tr><td>${esc(b.title)}</td><td>${esc(b.author)}</td><td dir="ltr" style="text-align:start">${esc(b.isbn)}</td><td><span class="tag ${f>0?"ok":"no"}">${f>0?`${t("avail")} (${f}/${b.copies})`:t("out")}</span></td>${L?`<td><button class="btn p" data-b="${b.id}" ${f?"":"disabled"}>${t("borrow")}</button><button class="btn d" data-x="${b.id}">${t("del")}</button></td>`:""}</tr>`}).join("");
+  return `<div class="panel"><div class="row"><input id="q" type="search" placeholder="${t("search")}" value="${esc(q)}"><select id="f"><option value="all">${t("all")}</option><option value="avail" ${flt==="avail"?"selected":""}>${t("avail")}</option><option value="out" ${flt==="out"?"selected":""}>${t("out")}</option></select></div><div class="wrap"><table><thead><tr><th>${t("title")}</th><th>${t("author")}</th><th>ISBN</th><th>${t("status")}</th>${L?"<th></th>":""}</tr></thead><tbody>${rows||`<tr><td colspan="5">${t("none")}</td></tr>`}</tbody></table></div></div>${L?`<form class="panel row" id="nb"><input name="title" placeholder="${t("title")}" required><input name="author" placeholder="${t("author")}" required><input name="isbn" placeholder="ISBN" dir="ltr"><input name="copies" type="number" min="1" value="1" style="max-width:90px" aria-label="${t("copies")}"><button class="btn p">${t("add")}</button></form>`:""}`;
+}
+function loansV(){
+  const s=q.toLowerCase();
+  const rows=db.loans.slice().reverse().map(l=>({l,b:byId(db.books,l.bookId),m:byId(db.users,l.memberId)})).filter(r=>r.b&&r.m&&(r.b.title+r.m.name).toLowerCase().includes(s)).map(({l,b,m})=>`<tr><td>${esc(b.title)}</td><td>${esc(m.name)}</td><td>${fmt(l.out)}</td><td>${fmt(l.due)}</td><td>${l.ret?`<span class="tag ok">${fmt(l.ret)}</span>`:`<span class="tag no">${t("open")}</span>`}</td><td>${l.ret?"":`<button class="btn p" data-r="${l.id}">${t("ret")}</button>`}</td></tr>`).join("");
+  return `<div class="panel"><div class="row"><input id="q" type="search" placeholder="${t("search")}" value="${esc(q)}"></div><div class="wrap"><table><thead><tr><th>${t("title")}</th><th>${t("borrower")}</th><th>${t("outd")}</th><th>${t("due")}</th><th>${t("retd")}</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="6">${t("none")}</td></tr>`}</tbody></table></div></div>`;
+}
+function usersV(){
+  const rows=db.users.map(u=>`<tr><td>${esc(u.name)}</td><td dir="ltr" style="text-align:start">${esc(u.username)}</td><td>${t(u.role)}</td><td>${u.id===me.id?"":`<button class="btn d" data-du="${u.id}">${t("del")}</button>`}</td></tr>`).join("");
+  return `<form class="panel row" id="nu"><input name="name" placeholder="${t("name")}" required><input name="username" placeholder="${t("user")}" dir="ltr" required><input name="pass" placeholder="${t("pass")}" dir="ltr" required><select name="role">${ROLES.map(r=>`<option value="${r}">${t(r)}</option>`).join("")}</select><button class="btn p">${t("addu")}</button></form><div class="panel wrap"><table><thead><tr><th>${t("name")}</th><th>${t("user")}</th><th>${t("role")}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function wire(){
+  const $=s=>document.querySelector(s),all=s=>document.querySelectorAll(s);
+  const qi=$("#q");if(qi)qi.oninput=()=>{q=qi.value;const p=qi.selectionStart;render();const n=$("#q");n.focus();n.setSelectionRange(p,p)};
+  const f=$("#f");if(f)f.onchange=()=>{flt=f.value;render()};
+  all("[data-x]").forEach(b=>b.onclick=()=>{const id=+b.dataset.x;db.books=db.books.filter(x=>x.id!==id);db.loans=db.loans.filter(l=>l.bookId!==id);save();render()});
+  all("[data-r]").forEach(b=>b.onclick=()=>{byId(db.loans,+b.dataset.r).ret=Date.now();save();render()});
+  all("[data-du]").forEach(b=>b.onclick=()=>{const id=+b.dataset.du;db.users=db.users.filter(u=>u.id!==id);save();render()});
+  all("[data-b]").forEach(b=>b.onclick=()=>lend(+b.dataset.b));
+  const nb=$("#nb");if(nb)nb.onsubmit=e=>{e.preventDefault();const d=new FormData(nb);db.books.push({id:nid(db.books),title:d.get("title").trim(),author:d.get("author").trim(),isbn:d.get("isbn").trim(),copies:Math.max(1,+d.get("copies")||1)});save();render()};
+  const nu=$("#nu");if(nu)nu.onsubmit=e=>{e.preventDefault();const d=new FormData(nu),un=d.get("username").trim();if(db.users.some(u=>u.username===un))return nu.username.setCustomValidity("!"),nu.reportValidity(),nu.username.setCustomValidity("");db.users.push({id:nid(db.users),name:d.get("name").trim(),username:un,pass:d.get("pass"),role:d.get("role")});save();render()};
+}
+function lend(id){
+  const ms=db.users.filter(u=>u.role==="member"),d=document.getElementById("dlg"),b=byId(db.books,id);
+  d.innerHTML=ms.length?`<form method="dialog"><p><b>${esc(b.title)}</b></p><select id="m" style="width:100%">${ms.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select><div class="row" style="margin-block-start:1rem"><button class="btn p" value="ok">${t("confirm")}</button><button class="btn" value="x">${t("cancel")}</button></div></form>`:`<form method="dialog"><p>${t("nomem")}</p><button class="btn">${t("cancel")}</button></form>`;
+  d.onclose=()=>{if(d.returnValue==="ok"){const n=Date.now();db.loans.push({id:nid(db.loans),bookId:id,memberId:+document.getElementById("m").value,out:n,due:n+14*864e5,ret:null});save();render()}d.returnValue=""};
+  d.showModal();
+}
+render();
+</script>
+</body>
+</html>

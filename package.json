@@ -1,0 +1,6 @@
+{
+  "name": "library-system",
+  "version": "0.1.0",
+  "description": "Library management system (AR/EN, dark mode)",
+  "scripts": { "start": "npx --yes serve public -l 3000" }
+}
